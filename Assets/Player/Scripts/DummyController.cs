@@ -31,22 +31,14 @@ namespace Player
         void FixedUpdate()
         {
             if (lossofControl > 0) lossofControl--;
-            ProcessJump();
             if ((IsGrounded() || allowControlInAir) && lossofControl == 0)
             {
+                ProcessJump();
                 RemovePreviousRotationVel();
                 RemovePreviousTranslationVel();
                 RotationalControl();
                 TranslationalControl();
             }
-        }
-
-        void RemovePreviousTranslationVel()
-        {
-            Vector2 projectedCorrection = new Vector2(rb.velocity.x, rb.velocity.z) * -1;
-            Vector2 correction = Vector2.ClampMagnitude(projectedCorrection, straightSpeed);
-            Vector3 brake = new Vector3(correction.x, 0, correction.y);
-            rb.AddForce(brake, ForceMode.VelocityChange);
         }
 
         void RemovePreviousRotationVel()
@@ -55,6 +47,14 @@ namespace Player
             int direction = (int)Mathf.Sign(rb.angularVelocity.y) * -1;
             Vector3 brake = new Vector3(0, correction * direction, 0);
             rb.AddTorque(brake, ForceMode.VelocityChange);
+        }
+
+        void RemovePreviousTranslationVel()
+        {
+            Vector2 projectedCorrection = new Vector2(rb.velocity.x, rb.velocity.z) * -1;
+            Vector2 correction = Vector2.ClampMagnitude(projectedCorrection, straightSpeed);
+            Vector3 brake = new Vector3(correction.x, 0, correction.y);
+            rb.AddForce(brake, ForceMode.VelocityChange);
         }
 
         void RotationalControl()
@@ -72,7 +72,7 @@ namespace Player
 
         void ProcessJump()
         {
-            if (jumpNow && IsGrounded())
+            if (jumpNow)
             {
                 rb.AddForce(jumpVector);
                 jumpNow = false;
@@ -81,12 +81,11 @@ namespace Player
 
         bool IsGrounded()
         {
-            if (Physics.Raycast(transform.position, Vector3.down, out _, 1.05f)) return true;
+            if (Physics.Raycast(transform.position, Vector3.down, out _, 1.1f)) return true;
             return false;
         }
 
-
-        private void OnCollisionEnter(Collision collision)
+        void OnCollisionEnter(Collision collision)
         {
             if(collision.gameObject.CompareTag("Player")) lossofControl = 60;
         }
